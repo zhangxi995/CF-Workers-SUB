@@ -41,6 +41,12 @@ export default {
 		subconfig = env.SUBCONFIG || subconfig;
 		FileName = env.SUBNAME || FileName;
 		MainData = env.LINK || MainData;
+        // 如果 `env.LINK` 是链接，先下载内容
+        if (env.LINK) {
+            const fetchedContent = await fetchContentIfURL(env.LINK);
+            MainData = fetchedContent;
+        }
+
 		if(env.LINKSUB) urls = await ADD(env.LINKSUB);
 
 		const currentDate = new Date();
@@ -207,6 +213,26 @@ export default {
 		}
 	}
 };
+
+// 检查并处理 `env.LINK` 如果是 URL
+async function fetchContentIfURL(link) {
+    try {
+        const isURL = /^(http|https):\/\//i.test(link); // 检查是否是 URL
+        if (isURL) {
+            const response = await fetch(link);
+            if (response.ok) {
+                return await response.text(); // 返回下载的内容
+            } else {
+                console.error(`Error fetching LINK: ${response.status}`);
+                return '';
+            }
+        }
+        return link; // 如果不是 URL，直接返回原内容
+    } catch (error) {
+        console.error(`Error in fetchContentIfURL: ${error.message}`);
+        return '';
+    }
+}
 
 async function ADD(envadd) {
 	var addtext = envadd.replace(/[	"'|\r\n]+/g, ',').replace(/,+/g, ',');	// 将空格、双引号、单引号和换行符替换为逗号
